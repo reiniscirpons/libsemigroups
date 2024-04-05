@@ -355,7 +355,7 @@ namespace libsemigroups {
   TEST_CASE("Presentation length Iwahori T_n",
             "[full_transf_monoid][length][000]") {
     auto p = full_transformation_monoid(4, fpsemigroup::author::Iwahori);
-    bench_length(p);
+    bench_length(p, 16, 382);
   }
 
   // Doesn't run, or is so slow that it's useless
@@ -434,6 +434,30 @@ namespace libsemigroups {
     REQUIRE(S.size() == n * std::pow(2, n) - n + 1);
     auto p = to_presentation<word_type>(S);
     bench_length(p, 4, 6);
+  }
+
+  TEST_CASE("Singular Brauer monoid 4 1st",
+            "[singular_brauer_monoid][length][000]") {
+    size_t n = 4;
+    auto   p = singular_brauer_monoid(n);
+    bench_length(p, 6, 165);
+  }
+  TEST_CASE("Singular Brauer monoid 4 2nd",
+            "[singular_brauer_monoid][length][001]") {
+    FroidurePin<Bipartition> S;
+    S.add_generator(Bipartition::make({{1, 2}, {3, -1}, {4, -2}, {-3, -4}}));
+    S.add_generator(Bipartition::make({{1, 2}, {3, -1}, {4, -4}, {-2, -3}}));
+    S.add_generator(Bipartition::make({{1, 2}, {3, -3}, {4, -1}, {-2, -4}}));
+    S.add_generator(Bipartition::make({{1, 2}, {3, -2}, {4, -3}, {-1, -4}}));
+    S.add_generator(Bipartition::make({{1, 2}, {3, -2}, {4, -4}, {-1, -3}}));
+    S.add_generator(Bipartition::make({{1, 3}, {2, -4}, {4, -3}, {-1, -2}}));
+    S.add_generator(Bipartition::make({{1, -4}, {2, 3}, {4, -3}, {-1, -2}}));
+    S.add_generator(Bipartition::make({{1, 4}, {2, -3}, {3, -4}, {-1, -2}}));
+    S.add_generator(Bipartition::make({{1, -3}, {2, 4}, {3, -4}, {-1, -2}}));
+    S.add_generator(Bipartition::make({{1, -3}, {2, -4}, {3, 4}, {-1, -2}}));
+    REQUIRE(S.size() == 81);
+    auto p = to_presentation<word_type>(S);
+    bench_length(p, 6, 165);
   }
 
   TEST_CASE("Presentation length machine cyclic inverse monoid 2nd",
