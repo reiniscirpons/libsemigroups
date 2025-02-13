@@ -317,6 +317,10 @@ namespace libsemigroups {
     using letter_type = typename word_type::value_type;
 
    private:
+    using Definition = std::pair<node_type, label_type>;
+    using internal_word_graph_type
+        = detail::FelschGraph<word_type, node_type, std::vector<Definition>>;
+
     std::vector<word_type>                 _exclude;
     size_t                                 _exclude_pruner_index;
     size_t                                 _idle_thread_restarts;
@@ -324,8 +328,8 @@ namespace libsemigroups {
     std::vector<word_type>::const_iterator _longs_begin;
     size_t                                 _num_threads;
     Presentation<word_type>                _presentation;
-    std::vector<std::function<bool(word_graph_type const&)>> _pruners;
-    mutable SimsStats                                        _stats;
+    std::vector<std::function<bool(internal_word_graph_type const&)>> _pruners;
+    mutable SimsStats                                                 _stats;
 
    public:
     //! Default constructor.
@@ -1474,7 +1478,7 @@ namespace libsemigroups {
 
       uint64_t number_of_congruences(size_type n) const;
     };  // SimsBase
-  }     // namespace detail
+  }  // namespace detail
 
   namespace sims {
     class const_cgp_iterator;
@@ -1972,7 +1976,7 @@ namespace libsemigroups {
 
       using SimsBase::IteratorBase::stats;
     };  // class iterator_base
-  };    // Sims2
+  };  // Sims2
 
   //!
   //!

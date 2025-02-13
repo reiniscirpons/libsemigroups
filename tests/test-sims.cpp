@@ -2213,7 +2213,7 @@ namespace libsemigroups {
 
   LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "051",
-                          "Heineken group - index 10",
+                          "not Heineken group - index 10",
                           "[extreme][sims1]") {
     auto                      rg = ReportGuard(true);
     Presentation<std::string> p;
@@ -2239,10 +2239,202 @@ namespace libsemigroups {
                                          "yXYXyyxYxyxYYXXyyx"}));
 
     Sims1 S;
-    S.presentation(p)
-        .number_of_threads(std::thread::hardware_concurrency())
-        .long_rule_length(37);
+    S.presentation(p).number_of_threads(4).long_rule_length(37);
     REQUIRE(S.number_of_congruences(10) == 1);
+  }
+
+  std::string invert(std::string const& g) {
+    auto invert = [](char c) {
+      if (std::isupper(c)) {
+        return std::tolower(c);
+      } else {
+        return std::toupper(c);
+      }
+    };
+    auto G = g;
+    std::reverse(G.begin(), G.end());
+    std::transform(G.begin(), G.end(), G.begin(), invert);
+    return G;
+  }
+
+  std::string comm(std::string const& g, std::string const& h) {
+    return invert(g) + invert(h) + g + h;
+  }
+
+  std::string next_cyclic_perm(std::string v) {
+    std::rotate(v.begin(), v.begin() + 1, v.end());
+    return v;
+  }
+
+  void all_cyclic_perms(Presentation<std::string>& p, std::string const& v) {
+    std::string copy = v;
+    do {
+      presentation::add_rule(p, copy, "");
+      next_cyclic_perm(copy);
+    } while (copy != v);
+  }
+
+  LIBSEMIGROUPS_TEST_CASE("Sims1",
+                          "132",
+                          "Heineken group - index 8 (all cyclic perms)",
+                          "[extreme][sims1]") {
+    using knuth_bendix::reduce;
+    auto                      rg = ReportGuard(true);
+    Presentation<std::string> p;
+    p.contains_empty_word(true);
+    p.alphabet("xXyYzZ");
+    presentation::add_inverse_rules(p, "XxYyZz");
+    KnuthBendix kb(congruence_kind::twosided, p);
+
+    REQUIRE(comm("x", "y") == "XYxy");
+    auto z = reduce(kb, comm("x", comm("x", "y")));
+    REQUIRE(z == "XYXyxYxy");
+
+    //  < x,y,z | [x,[x,y]]=z, [y,[y,z]]=x, [z,[z,x]]=y >
+    auto w = reduce(kb, comm("x", comm("x", "y")) + "Z");
+    all_cyclic_perms(p, w);
+    w = invert(w);
+    all_cyclic_perms(p, w);
+
+    w = reduce(kb, comm("y", comm("y", "z")) + "X");
+    all_cyclic_perms(p, w);
+    w = invert(w);
+    all_cyclic_perms(p, w);
+
+    w = reduce(kb, comm("z", comm("z", "x")) + "Y");
+    all_cyclic_perms(p, w);
+    w = invert(w);
+    all_cyclic_perms(p, w);
+
+    presentation::remove_trivial_rules(p);
+    presentation::remove_duplicate_rules(p);
+
+    Sims1 S;
+    S.presentation(p).number_of_threads(4);  // .long_rule_length(35);
+    REQUIRE(S.number_of_congruences(8) == 12);
+  }
+
+  LIBSEMIGROUPS_TEST_CASE("Sims1",
+                          "133",
+                          "Heineken group - index 8 (co-deterministic pruner)",
+                          "[extreme][sims1]") {
+    using knuth_bendix::reduce;
+    auto                      rg = ReportGuard(true);
+    Presentation<std::string> p;
+    p.contains_empty_word(true);
+    p.alphabet("xXyYzZ");
+    presentation::add_inverse_rules(p, "XxYyZz");
+    KnuthBendix kb(congruence_kind::twosided, p);
+
+    //  < x,y,z | [x,[x,y]]=z, [y,[y,z]]=x, [z,[z,x]]=y >
+    auto w = reduce(kb, comm("x", comm("x", "y")) + "Z");
+    presentation::add_rule(p, w, "");
+    // all_cyclic_perms(p, w);
+    // w = invert(w);
+    // all_cyclic_perms(p, w);
+
+    w = reduce(kb, comm("y", comm("y", "z")) + "X");
+    presentation::add_rule(p, w, "");
+    // all_cyclic_perms(p, w);
+    // w = invert(w);
+    // all_cyclic_perms(p, w);
+
+    w = reduce(kb, comm("z", comm("z", "x")) + "Y");
+    presentation::add_rule(p, w, "");
+    // all_cyclic_perms(p, w);
+    // w = invert(w);
+    // all_cyclic_perms(p, w);
+
+    presentation::remove_trivial_rules(p);
+    presentation::remove_duplicate_rules(p);
+
+    auto codet = [](auto const& wg) {
+      for (uint32_t s = 0; s < wg.number_of_active_nodes(); ++s) {
+        for (auto a : wg.labels()) {
+          auto e = wg.first_source_no_checks(s, a);
+          if (e != UNDEFINED) {
+            if (wg.next_source_no_checks(e, a) != UNDEFINED) {
+              return false;
+            }
+          }
+        }
+      }
+      return true;
+    };
+
+    Sims1 S;
+    S.presentation(p).add_pruner(codet).number_of_threads(
+        4);  // .long_rule_length(35);
+    REQUIRE(S.number_of_congruences(8) == 12);
+  }
+
+  LIBSEMIGROUPS_TEST_CASE("Sims1",
+                          "131",
+                          "Heineken group - index 8 (manip)",
+                          "[extreme][sims1]") {
+    using knuth_bendix::reduce;
+    auto                      rg = ReportGuard(true);
+    Presentation<std::string> p;
+    p.contains_empty_word(true);
+    p.alphabet("xXyYzZ");
+    presentation::add_inverse_rules(p, "XxYyZz");
+    KnuthBendix kb(congruence_kind::twosided, p);
+
+    p.init();
+    p.contains_empty_word(true);
+    p.alphabet("xXyY");
+    auto z = reduce(kb, comm("x", comm("x", "y")));
+    presentation::add_inverse_rules(p, "XxYy");
+    presentation::add_rule(p, reduce(kb, comm("y", comm("y", z))), "x");
+    presentation::add_rule(p, reduce(kb, comm(z, comm(z, "x"))), "y");
+    presentation::balance_no_checks(p, p.alphabet(), std::string("XxYy"));
+
+    REQUIRE(p.rules
+            == std::vector<std::string>({"xX",
+                                         "",
+                                         "Xx",
+                                         "",
+                                         "yY",
+                                         "",
+                                         "Yy",
+                                         "",
+                                         "YYXyXYxyxYXYXyxYxy",
+                                         "xYXyXYxyxYXYXyxYx",
+                                         "YXyXXYxyxYXyxY",
+                                         "yXYXyXYxyxxYX"}));
+
+    //  ParseRelators(GeneratorsOfGroup(F), "xX=1, Xx=1, yY=1, Yy=1,
+    //  YYXyXYxyxYXYXyxYxy= xYXyXYxyxYXYXyxYx, YXyXXYxyxYXyxY= yXYXyXYxyxxYX");
+
+    Sims1 S;
+    S.presentation(p).number_of_threads(4).long_rule_length(35);
+    REQUIRE(S.number_of_congruences(9) == 12);
+  }
+
+  LIBSEMIGROUPS_TEST_CASE("Sims1",
+                          "086",
+                          "Heineken group - index 8 (no manip)",
+                          "[extreme][sims1]") {
+    using knuth_bendix::reduce;
+    auto                      rg = ReportGuard(true);
+    Presentation<std::string> p;
+    p.contains_empty_word(true);
+    p.alphabet("xXyYzZ");
+    presentation::add_inverse_rules(p, "XxYyZz");
+    KnuthBendix kb(congruence_kind::twosided, p);
+
+    REQUIRE(comm("x", "y") == "XYxy");
+    auto z = reduce(kb, comm("x", comm("x", "y")));
+    REQUIRE(z == "XYXyxYxy");
+
+    //  < x,y,z | [x,[x,y]]=z, [y,[y,z]]=x, [z,[z,x]]=y >
+    presentation::add_rule(p, reduce(kb, comm("x", comm("x", "y"))), "z");
+    presentation::add_rule(p, reduce(kb, comm("y", comm("y", "z"))), "x");
+    presentation::add_rule(p, reduce(kb, comm("z", comm("z", "x"))), "y");
+
+    Sims1 S;
+    S.presentation(p).number_of_threads(4);  // .long_rule_length(35);
+    REQUIRE(S.number_of_congruences(8) == 12);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1",
@@ -3105,7 +3297,7 @@ namespace libsemigroups {
                           "080",
                           "fibonacci_group(2, 9) x 1",
                           "[quick][no-valgrind]") {
-    auto                      rg = ReportGuard(false);
+    auto                      rg = ReportGuard(true);
     Presentation<std::string> p;
     p.alphabet("abcdefghiABCDEFGHI");
     p.contains_empty_word(true);
@@ -3120,7 +3312,7 @@ namespace libsemigroups {
     presentation::add_rule(p, "gh", "i");
     presentation::add_rule(p, "hi", "a");
     presentation::add_rule(p, "ia", "b");
-    Sims2 S;
+    Sims1 S;
     S.presentation(p);
     REQUIRE(S.number_of_threads(4).number_of_congruences(12) == 6);
   }
@@ -3168,6 +3360,33 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims1", "082", "trivial group", "[fail][sims1]") {
     // This doesn't fail it's just very extreme
     auto                      rg = ReportGuard();
+    Presentation<std::string> p;
+    p.alphabet("rstRST");
+    p.contains_empty_word(true);
+    presentation::add_inverse_rules(p, "RSTrst");
+    presentation::add_rule(p, "rt", "trr");
+    presentation::add_rule(p, "sr", "rss");
+    presentation::add_rule(p, "ts", "stt");
+
+    ToddCoxeter tc(congruence_kind::twosided, p);
+    tc.strategy(decltype(tc)::options::strategy::felsch);
+    REQUIRE(tc.number_of_classes() == 1);
+    tc.shrink_to_fit();
+    REQUIRE(tc.word_graph().number_of_nodes() == 1);
+
+    Sims1 S;
+    S.presentation(p);
+    // Took 19min11s on RC office computer
+    REQUIRE(S.number_of_threads(std::thread::hardware_concurrency())
+                .number_of_congruences(20)
+            == 1);
+  }
+
+  LIBSEMIGROUPS_TEST_CASE("Sims1",
+                          "600",
+                          "Gossip monoid 2-sided",
+                          "[quick][sims1]") {
+    auto                      rg = ReportGuard(false);
     Presentation<std::string> p;
     p.alphabet("rstRST");
     p.contains_empty_word(true);
