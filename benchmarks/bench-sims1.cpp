@@ -871,4 +871,53 @@ namespace libsemigroups {
     // };
   }
 
+  TEST_CASE("Gossip monoid 2-sided", "[gossip_monoid_2_sided]") {
+    auto rg = ReportGuard(false);
+    auto S  = make<FroidurePin>({BMat8({{1, 1, 0}, {1, 1, 0}, {0, 0, 1}}),
+                                 BMat8({{1, 0, 1}, {0, 1, 0}, {1, 0, 1}}),
+                                 BMat8({{1, 0, 0}, {0, 1, 1}, {0, 1, 1}})});
+    Presentation<word_type> p(to_presentation<word_type>(S));
+    p.contains_empty_word(true);
+
+    Sims2 T;
+    BENCHMARK("Index 11 - 1 thread") {
+      T.init(p);
+      REQUIRE(T.number_of_threads(1).number_of_congruences(11) == 84);
+    };
+  }
+
+  TEST_CASE("Jones monoid 2-sided", "[jones_monoid_2_sided]") {
+    auto                rg    = ReportGuard(false);
+    std::vector<size_t> sizes = {0, 0, 0, 0, 14, 42, 132, 429};
+    std::vector<size_t> num   = {0, 0, 0, 0, 9, 6, 10, 7};
+
+    for (size_t n = 4; n < 8; ++n) {
+      Sims2 S;
+      auto  p = presentation::examples::temperley_lieb_monoid(n);
+      BENCHMARK(
+          fmt::format("n = {} | index {} | 1 thread", n, sizes[n]).c_str()) {
+        S.init(p);
+        REQUIRE(S.number_of_threads(1).number_of_congruences(sizes[n])
+                == num[n]);
+      };
+    }
+  }
+
+  TEST_CASE("full transf. monoid 2-sided", "[full_transf_2_sided]") {
+    auto                rg    = ReportGuard(false);
+    std::vector<size_t> sizes = {0, 0, 4, 27, 256, 3125};
+    std::vector<size_t> num   = {0, 0, 4, 7, 11, 14};
+
+    for (size_t n = 4; n < 6; ++n) {
+      Sims2 S;
+      auto  p = presentation::examples::full_transformation_monoid_Aiz58(n);
+      BENCHMARK(
+          fmt::format("n = {} | index {} | 1 thread", n, sizes[n]).c_str()) {
+        S.init(p);
+        REQUIRE(S.number_of_threads(1).number_of_congruences(sizes[n])
+                == num[n]);
+      };
+    }
+  }
+
 }  // namespace libsemigroups
