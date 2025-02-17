@@ -51,8 +51,8 @@ monoids. Namely:
     paper](https://arxiv.org/abs/2302.06295) for details.
 -   a version of [Stephen's procedure](https://rb.gy/brsuvc) for
     finitely presented semigroups and monoids (for a given word \\(w\\) this
-    procedure is for determining words equivalent to $w$ or that are
-    left divisors of $w$).
+    procedure is for determining words equivalent to \\(w\\) or that are
+    left divisors of \\(w\\).
 
 `libsemigroups` is partly based on [Algorithms for computing finite
 semigroups](https://www.irif.fr/~jep/PDF/Rio.pdf), [Expository
