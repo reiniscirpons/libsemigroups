@@ -29,17 +29,19 @@
 
 #include "libsemigroups/bipart.hpp"  // for Bipartition
 #include "libsemigroups/bmat-fastest.hpp"
-#include "libsemigroups/bmat8.hpp"
-#include "libsemigroups/detail/report.hpp"          // for ReportGuard
-#include "libsemigroups/froidure-pin.hpp"           // for FroidurePinBase
-#include "libsemigroups/froidure-pin.hpp"           // for FroidurePin
-#include "libsemigroups/knuth-bendix.hpp"           // for redundant_rule
+#include "libsemigroups/bmat8.hpp"          // for pbr
+#include "libsemigroups/detail/report.hpp"  // for ReportGuard
+#include "libsemigroups/froidure-pin.hpp"   // for FroidurePinBase
+#include "libsemigroups/froidure-pin.hpp"   // for FroidurePin
+#include "libsemigroups/knuth-bendix.hpp"   // for redundant_rule
+#include "libsemigroups/pbr.hpp"
 #include "libsemigroups/presentation-examples.hpp"  // for presentation::examples
 #include "libsemigroups/runner.hpp"
 #include "libsemigroups/sims.hpp"             // for ReportGuard
 #include "libsemigroups/to-presentation.hpp"  // for to_presentation
 #include "libsemigroups/transf.hpp"           // for ReportGuard
 #include "libsemigroups/types.hpp"            // for word_type, letter_type
+#include "libsemigroups/word-range.hpp"
 
 namespace libsemigroups {
   namespace {
@@ -880,7 +882,7 @@ namespace libsemigroups {
     p.contains_empty_word(true);
 
     Sims2 T;
-    BENCHMARK("Index 11 - 1 thread") {
+    BENCHMARK("n = 3, index 11, threads 1") {
       T.init(p);
       REQUIRE(T.number_of_threads(1).number_of_congruences(11) == 84);
     };
@@ -895,7 +897,94 @@ namespace libsemigroups {
       Sims2 S;
       auto  p = presentation::examples::temperley_lieb_monoid(n);
       BENCHMARK(
-          fmt::format("n = {} | index {} | 1 thread", n, sizes[n]).c_str()) {
+          fmt::format("n = {}, index {}, threads 1", n, sizes[n]).c_str()) {
+        S.init(p);
+        REQUIRE(S.number_of_threads(1).number_of_congruences(sizes[n])
+                == num[n]);
+      };
+    }
+  }
+
+  TEST_CASE("Brauer monoid 2-sided", "[brauer_monoid_2_sided]") {
+    auto                rg    = ReportGuard(false);
+    std::vector<size_t> sizes = {0, 0, 3, 15, 105};
+    std::vector<size_t> num   = {0, 0, 3, 7, 19};
+
+    for (size_t n = 2; n < 5; n += 2) {
+      Sims2 S;
+      auto  p = presentation::examples::brauer_monoid(n);
+      BENCHMARK(
+          fmt::format("n = {}, index {}, threads 1", n, sizes[n]).c_str()) {
+        S.init(p);
+        REQUIRE(S.number_of_threads(1).number_of_congruences(sizes[n])
+                == num[n]);
+      };
+    }
+  }
+
+  TEST_CASE("Partition monoid 2-sided", "[partition_monoid_2_sided]") {
+    auto                rg    = ReportGuard(false);
+    std::vector<size_t> sizes = {0, 0, 15, 203};
+    std::vector<size_t> num   = {0, 0, 13, 16};
+
+    {
+      size_t n = 2;
+      auto   S = make<FroidurePin>({Bipartition({{1, -2}, {2, -1}}),
+                                    Bipartition({{1}, {2, -2}, {-1}}),
+                                    Bipartition({{1, 2, -1, -2}})});
+      REQUIRE(S.size() == sizes[2]);
+      auto  p = to_presentation<word_type>(S);
+      Sims2 T(p);
+      BENCHMARK(
+          fmt::format("n = {}, index {}, threads 1", n, sizes[n]).c_str()) {
+        REQUIRE(T.number_of_threads(1).number_of_congruences(sizes[n])
+                == num[n]);
+      };
+    }
+    {
+      size_t n = 3;
+      auto   S = make<FroidurePin>({Bipartition({{1, -2}, {2, -3}, {3, -1}}),
+                                    Bipartition({{1, -2}, {2, -1}, {3, -3}}),
+                                    Bipartition({{1}, {2, -2}, {3, -3}, {-1}}),
+                                    Bipartition({{1, 2, -1, -2}, {3, -3}})});
+      REQUIRE(S.size() == sizes[n]);
+      auto  p = to_presentation<word_type>(S);
+      Sims2 T(p);
+      BENCHMARK(
+          fmt::format("n = {}, index {}, threads 1", n, sizes[n]).c_str()) {
+        REQUIRE(T.number_of_threads(1).number_of_congruences(sizes[n])
+                == num[n]);
+      };
+    }
+  }
+
+  TEST_CASE("full pbr monoid", "[full_pbr_2_sided]") {
+    auto rg = ReportGuard(false);
+    auto S  = make<FroidurePin>({PBR({{}}, {{1}}),
+                                 PBR({{-1, 1}}, {{1}}),
+                                 PBR({{-1}}, {{}}),
+                                 PBR({{-1}}, {{1}}),
+                                 PBR({{-1}}, {{-1, 1}})});
+
+    size_t n = 1;
+    REQUIRE(S.size() == 16);
+    auto  p = to_presentation<word_type>(S);
+    Sims2 T(p);
+    BENCHMARK(fmt::format("n = {}, index {}, threads 1", n, 16).c_str()) {
+      REQUIRE(T.number_of_threads(1).number_of_congruences(16) == 167);
+    };
+  }
+
+  TEST_CASE("symmetric group", "[symmetric_group_2_sided]") {
+    auto                rg    = ReportGuard(false);
+    std::vector<size_t> sizes = {1, 1, 2, 6, 24, 120};
+    std::vector<size_t> num   = {0, 1, 2, 3, 4, 3};
+
+    for (size_t n = 4; n < 6; ++n) {
+      Sims2 S;
+      auto  p = presentation::examples::symmetric_group_Car56(n);
+      BENCHMARK(
+          fmt::format("n = {} | index {} | threads 1", n, sizes[n]).c_str()) {
         S.init(p);
         REQUIRE(S.number_of_threads(1).number_of_congruences(sizes[n])
                 == num[n]);
@@ -904,20 +993,126 @@ namespace libsemigroups {
   }
 
   TEST_CASE("full transf. monoid 2-sided", "[full_transf_2_sided]") {
+    using literals::operator""_p;
     auto                rg    = ReportGuard(false);
     std::vector<size_t> sizes = {0, 0, 4, 27, 256, 3125};
     std::vector<size_t> num   = {0, 0, 4, 7, 11, 14};
 
-    for (size_t n = 4; n < 6; ++n) {
+    // {
+    //   size_t                    n = 2;
+    //   Presentation<std::string> p;
+    //   p.alphabet("ab");
+    //   p.contains_empty_word(true);
+    //   presentation::add_rule(p, "aa", "");
+    //   presentation::add_rule(p, "ab", "b");
+    //   presentation::add_rule(p, "bb", "b");
+    //   Sims2 S;
+    //   BENCHMARK(
+    //       fmt::format("n = {}, index {}, threads 1", n, sizes[n]).c_str()) {
+    //     S.init(p);
+    //     REQUIRE(S.number_of_threads(1).number_of_congruences(sizes[n])
+    //             == num[n]);
+    //   };
+    // }
+
+    {
+      size_t                    n = 3;
+      Presentation<std::string> p;
+      p.alphabet("abc");
+      p.contains_empty_word(true);
+      presentation::add_rule(p, "b^2"_p, ""_p);
+      presentation::add_rule(p, "bc"_p, "ac"_p);
+      presentation::add_rule(p, "c^2"_p, "c"_p);
+      presentation::add_rule(p, "a^3"_p, ""_p);
+      presentation::add_rule(p, "a^2b"_p, "ba"_p);
+      presentation::add_rule(p, "aba"_p, "b"_p);
+      presentation::add_rule(p, "baa"_p, "ab"_p);
+      presentation::add_rule(p, "bab"_p, "aa"_p);
+      presentation::add_rule(p, "bac"_p, "c"_p);
+      presentation::add_rule(p, "cac"_p, "cb"_p);
+      presentation::add_rule(p, "aca^2c"_p, "ca^2c"_p);
+      presentation::add_rule(p, "ca^2cb"_p, "ca^2ca"_p);
+      presentation::add_rule(p, "ca^2cab"_p, "ca^2c"_p);
       Sims2 S;
-      auto  p = presentation::examples::full_transformation_monoid_Aiz58(n);
       BENCHMARK(
-          fmt::format("n = {} | index {} | 1 thread", n, sizes[n]).c_str()) {
+          fmt::format("n = {}, index {}, threads 1", n, sizes[n]).c_str()) {
         S.init(p);
         REQUIRE(S.number_of_threads(1).number_of_congruences(sizes[n])
                 == num[n]);
       };
     }
+    {
+      size_t n = 4;
+      auto   p = presentation::examples::full_transformation_monoid_II74(n);
+      Sims2  S;
+      BENCHMARK(
+          fmt::format("n = {}, index {}, threads 1", n, sizes[n]).c_str()) {
+        S.init(p);
+        REQUIRE(S.number_of_threads(1).number_of_congruences(sizes[n])
+                == num[n]);
+      };
+    }
+  }
+
+  TEST_CASE("rook monoid 2-sided", "[rook_2_sided]") {
+    auto                rg    = ReportGuard(false);
+    std::vector<size_t> sizes = {0, 2, 7, 34, 209};
+    std::vector<size_t> num   = {0, 2, 4, 7, 11};
+
+    for (size_t n = 3; n < 5; ++n) {
+      auto  p = presentation::examples::symmetric_inverse_monoid_Gay18(n);
+      Sims2 S;
+      BENCHMARK(
+          fmt::format("n = {}, index {}, threads 1", n, sizes[n]).c_str()) {
+        S.init(p);
+        REQUIRE(S.number_of_threads(1).number_of_congruences(sizes[n])
+                == num[n]);
+      };
+    }
+  }
+
+  TEST_CASE("motzkin monoid 2-sided", "[motzkin_2_sided]") {
+    auto                rg    = ReportGuard(false);
+    std::vector<size_t> sizes = {0, 2, 9, 51, 323};
+    std::vector<size_t> num   = {0, 2, 9, 10, 11};
+
+    for (size_t n = 3; n < 5; ++n) {
+      auto  p = presentation::examples::motzkin_monoid(n);
+      Sims2 S;
+      BENCHMARK(
+          fmt::format("n = {}, index {}, threads 1", n, sizes[n]).c_str()) {
+        S.init(p);
+        REQUIRE(S.number_of_threads(1).number_of_congruences(sizes[n])
+                == num[n]);
+      };
+    }
+  }
+
+  TEST_CASE("partial transf. monoid 2-sided", "[part_transf_2_sided]") {
+    auto rg = ReportGuard(false);
+
+    auto T = make<FroidurePin>({Transf<4>({1, 0, 2, 3}),
+                                Transf<4>({2, 0, 1, 3}),
+                                Transf<4>({3, 1, 2, 3}),
+                                Transf<4>({1, 1, 2, 3})});
+    REQUIRE(T.size() == 64);
+    auto  p = to_presentation<word_type>(T);
+    Sims2 S;
+    BENCHMARK(fmt::format("n = {}, index {}, threads 1", 3, 64).c_str()) {
+      S.init(p);
+      REQUIRE(S.number_of_threads(1).number_of_congruences(64) == 7);
+    };
+  }
+
+  TEST_CASE("partial brauer monoid 2-sided", "[part_brauer_2_sided]") {
+    auto rg = ReportGuard(false);
+
+    auto  p = presentation::examples::partial_brauer_monoid(3);
+    Sims2 S;
+    BENCHMARK(fmt::format("n = {}, index {}, threads 1", 3, 76).c_str()) {
+      S.init(p);
+      REQUIRE(S.number_of_threads(1).number_of_congruences(76) == 16);
+    };
   }
 
 }  // namespace libsemigroups

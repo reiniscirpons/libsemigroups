@@ -40,6 +40,7 @@
 #include "test-main.hpp"          // for LIBSEMIGROUPS_TEST_CASE
 
 #include "libsemigroups/bipart.hpp"        // for Bipartition
+#include "libsemigroups/bmat8.hpp"         // for BMat8
 #include "libsemigroups/constants.hpp"     // for UNDEFINED
 #include "libsemigroups/exception.hpp"     // for LibsemigroupsException
 #include "libsemigroups/froidure-pin.hpp"  // for FroidurePin
@@ -3382,33 +3383,6 @@ namespace libsemigroups {
             == 1);
   }
 
-  LIBSEMIGROUPS_TEST_CASE("Sims1",
-                          "600",
-                          "Gossip monoid 2-sided",
-                          "[quick][sims1]") {
-    auto                      rg = ReportGuard(false);
-    Presentation<std::string> p;
-    p.alphabet("rstRST");
-    p.contains_empty_word(true);
-    presentation::add_inverse_rules(p, "RSTrst");
-    presentation::add_rule(p, "rt", "trr");
-    presentation::add_rule(p, "sr", "rss");
-    presentation::add_rule(p, "ts", "stt");
-
-    ToddCoxeter tc(congruence_kind::twosided, p);
-    tc.strategy(decltype(tc)::options::strategy::felsch);
-    REQUIRE(tc.number_of_classes() == 1);
-    tc.shrink_to_fit();
-    REQUIRE(tc.word_graph().number_of_nodes() == 1);
-
-    Sims1 S;
-    S.presentation(p);
-    // Took 19min11s on RC office computer
-    REQUIRE(S.number_of_threads(std::thread::hardware_concurrency())
-                .number_of_congruences(20)
-            == 1);
-  }
-
   LIBSEMIGROUPS_TEST_CASE("Sims1", "083", "M11 x 1", "[extreme][sims1]") {
     using words::pow;
     Presentation<std::string> p;
@@ -3553,8 +3527,8 @@ namespace libsemigroups {
                011222210_w, 102221220_w, 012221220_w};
 
     auto S = Sims1(p);
-    // NOTE: Never ran to completion, there should be a non-zero number of
-    // congruences.
+    // NOTE: Never ran to completion, there should be
+    // a non-zero number of congruences.
     REQUIRE(S.number_of_threads(std::thread::hardware_concurrency())
                 .number_of_congruences(31)
             == 0);
@@ -3567,16 +3541,21 @@ namespace libsemigroups {
     auto          d = orc.presentation(presentation::examples::brauer_monoid(5))
                  .target_size(945)
                  .number_of_threads(std::thread::hardware_concurrency())
-                 // The following are pairs of words in the GAP BrauerMonoid
-                 // that generate the minimal 2-sided congruences of
-                 // BrauerMonoid(5), the generating sets are not the same
-                 // though and so this doesn't work.
-                 // sims::add_excluded_pair(d, 201002_w, 00201002_w)
-                 // sims::add_excluded_pair(d, 00102002_w, 001020020_w)
+                 // The following are pairs of words in
+                 // the GAP BrauerMonoid that generate
+                 // the minimal 2-sided congruences of
+                 // BrauerMonoid(5), the generating sets
+                 // are not the same though and so this
+                 // doesn't work.
+                 // sims::add_excluded_pair(d, 201002_w,
+                 // 00201002_w)
+                 // sims::add_excluded_pair(d,
+                 // 00102002_w, 001020020_w)
                  .word_graph();
 
     // sigma_i = (i, i + 1)
-    // theta_i = Bipartition([[i, i + 1], [-i, -(i + 1)], [j, -j], j neq i]);
+    // theta_i = Bipartition([[i, i + 1], [-i, -(i +
+    // 1)], [j, -j], j neq i]);
 
     REQUIRE(d.number_of_nodes() == 46);
   }
@@ -3599,8 +3578,8 @@ namespace libsemigroups {
                    .word_graph();
 
       // sigma_i = (i, i + 1)
-      // theta_i = Bipartition([[i, i + 1], [-i, -(i + 1)], [j, -j], j neq
-      // i]);
+      // theta_i = Bipartition([[i, i + 1], [-i, -(i +
+      // 1)], [j, -j], j neq i]);
 
       REQUIRE(d.number_of_nodes() == min_degrees[n]);
     }
@@ -3677,8 +3656,8 @@ namespace libsemigroups {
     presentation::add_rule(p, "fe"_p, "ef");
     Sims1 s(p);
 
-    // NOTE: Never ran to completion, there should be a non-zero number of
-    // congruences.
+    // NOTE: Never ran to completion, there should be
+    // a non-zero number of congruences.
     REQUIRE(s.number_of_threads(std::thread::hardware_concurrency())
                 .number_of_congruences(std::pow(2, 6))
             == 0);
@@ -3714,7 +3693,8 @@ namespace libsemigroups {
     Sims2 S(presentation::examples::full_transformation_monoid_II74(4));
 
     REQUIRE(S.number_of_congruences(256) == 11);  // Verified with GAP
-    // sims::dot_poset("example-093-T-4-2-sided", S.cbegin(256), S.cend(256));
+    // sims::dot_poset("example-093-T-4-2-sided",
+    // S.cbegin(256), S.cend(256));
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims2",
@@ -3726,8 +3706,9 @@ namespace libsemigroups {
     REQUIRE(S.number_of_congruences(256) == 11);
   }
 
-  // Not sure if the next test case runs to completion or not, JDM ran this
-  // for 2m30s and it didn't terminate.
+  // Not sure if the next test case runs to completion
+  // or not, JDM ran this for 2m30s and it didn't
+  // terminate.
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "095",
                           "2-sided T_4 Aizenstat presentation",
@@ -3739,8 +3720,9 @@ namespace libsemigroups {
     REQUIRE(S.number_of_congruences(256) == 11);
   }
 
-  // Not sure if the next test case runs to completion or not, JDM ran this
-  // for 2m30s and it didn't terminate.
+  // Not sure if the next test case runs to completion
+  // or not, JDM ran this for 2m30s and it didn't
+  // terminate.
   LIBSEMIGROUPS_TEST_CASE("Sims2",
                           "096",
                           "2-sided S_6 Burnside+Miller presentation",
@@ -3793,7 +3775,8 @@ namespace libsemigroups {
     presentation::add_rule(p, "yyy", "");
     presentation::add_rule(p, "xyxyxyxyxyxyxy", "");
     Sims2 S(p);
-    // Smallest non-trivial homomorphic image has size 168, see
+    // Smallest non-trivial homomorphic image has size
+    // 168, see
     // https://mathoverflow.net/questions/180231/
     // for more details
     REQUIRE(S.number_of_congruences(168) == 2);
@@ -3850,7 +3833,8 @@ namespace libsemigroups {
     p.alphabet("xyXY");
     presentation::add_rule(p, "yXYYxyYYxyyXYYxyyXyXYYxyX", "");
     presentation::add_rule(p, "YxyyXXYYxyxYxyyXYXyXYYxxyyXYXyXYYxyxY", "");
-    // REQUIRE(presentation::to_gap_string(p, "S") == "");
+    // REQUIRE(presentation::to_gap_string(p, "S") ==
+    // "");
     Sims2 S(p);
     sims::add_included_pair(S, 0_w, 2_w);
     REQUIRE(S.number_of_threads(std::thread::hardware_concurrency())
@@ -3892,7 +3876,8 @@ namespace libsemigroups {
     presentation::add_rule(p, "abbabaaBaaB", "bAbAAbA");
     presentation::add_rule(p, "babaaBaaBaB", "BAbAbAA");
 
-    // REQUIRE(presentation::to_gap_string(p, "S") == "");
+    // REQUIRE(presentation::to_gap_string(p, "S") ==
+    // "");
     Sims2 S(p);
     // TODO(2): check correctness
     REQUIRE(S.number_of_threads(std::thread::hardware_concurrency())
@@ -3919,7 +3904,8 @@ namespace libsemigroups {
     check_congruence_count_with_free_object(S, 3, 17);
     REQUIRE(S.number_of_threads(8).number_of_congruences(4) == 52);
     check_congruence_count_with_free_object(S, 4, 52);
-    // sims::dot_poset("example-104-baaabaaa=aba", S.cbegin(4), S.cend(4));
+    // sims::dot_poset("example-104-baaabaaa=aba",
+    // S.cbegin(4), S.cend(4));
 
     std::atomic_size_t count = 0;
     Sims1              T(p);
@@ -3938,10 +3924,12 @@ namespace libsemigroups {
     });
     REQUIRE(count == 52);
 
-    // Note that Catch's REQUIRE macro is not thread safe, see:
+    // Note that Catch's REQUIRE macro is not thread
+    // safe, see:
     // https://github.com/catchorg/Catch2/issues/99
-    // as such we cannot call any function (like check_right_generating_pairs)
-    // that uses REQUIRE in multiple threads.
+    // as such we cannot call any function (like
+    // check_right_generating_pairs) that uses REQUIRE
+    // in multiple threads.
     S.number_of_threads(1).for_each(
         5, [&S](auto const& wg) { check_two_sided_generating_pairs(S, wg); });
     S.for_each(5,
@@ -3958,11 +3946,11 @@ namespace libsemigroups {
     REQUIRE(S.number_of_threads(8).number_of_congruences(13) == 330'328);
   }
 
-  LIBSEMIGROUPS_TEST_CASE(
-      "Sims2",
-      "105",
-      "2-sided one-relation baabbaa=a",
-      "[extreme][sims2][low-index][no-valgrind][no-coverage]") {
+  LIBSEMIGROUPS_TEST_CASE("Sims2",
+                          "105",
+                          "2-sided one-relation baabbaa=a",
+                          "[extreme][sims2][low-index][no-valgrind][no-"
+                          "coverage]") {
     auto                      rg = ReportGuard(true);
     Presentation<std::string> p;
     p.alphabet("ab");
@@ -3971,11 +3959,13 @@ namespace libsemigroups {
 
     Sims2 S(p);
 
-    // sims::dot_poset("example-105-baabbaa=a-2-sided", S.cbegin(8),
-    // S.cend(8));
-    // Takes a long time to run, seems like we get all the congruences quite
-    // early on, but then spend very long checking that there are no more.
-    // Perhaps if we had some sort of upper bound could speed things up?
+    // sims::dot_poset("example-105-baabbaa=a-2-sided",
+    // S.cbegin(8), S.cend(8)); Takes a long time to
+    // run, seems like we get all the congruences
+    // quite early on, but then spend very long
+    // checking that there are no more. Perhaps if we
+    // had some sort of upper bound could speed things
+    // up?
     size_t num_threads = std::thread::hardware_concurrency();
     REQUIRE(S.number_of_threads(num_threads).number_of_congruences(1) == 1);
     check_congruence_count_with_free_object(S, 1, 1);
@@ -4002,13 +3992,14 @@ namespace libsemigroups {
             == 1'733);
     REQUIRE(S.number_of_threads(num_threads).number_of_congruences(17)
             == 2'094);
-    // This is a little too extreme with the next 3 lines uncommented.
-    // REQUIRE(S.number_of_threads(num_threads).number_of_congruences(18) ==
-    // 2'531);
-    // REQUIRE(S.number_of_threads(num_threads).number_of_congruences(19) ==
-    // 3'012);
-    // REQUIRE(S.number_of_threads(num_threads).number_of_congruences(20) ==
-    // 3'574);
+    // This is a little too extreme with the next 3
+    // lines uncommented.
+    // REQUIRE(S.number_of_threads(num_threads).number_of_congruences(18)
+    // == 2'531);
+    // REQUIRE(S.number_of_threads(num_threads).number_of_congruences(19)
+    // == 3'012);
+    // REQUIRE(S.number_of_threads(num_threads).number_of_congruences(20)
+    // == 3'574);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims2",
@@ -4059,8 +4050,9 @@ namespace libsemigroups {
     REQUIRE((sims::right_generating_pairs(p, *it) | not_in_p | rx::to_vector())
             == std::vector<relation_type>({{10_w, 1_w}}));
 
-    // Note that all the rules below follow from the rules in the
-    // presentation, and so this congruence is the trivial one.
+    // Note that all the rules below follow from the
+    // rules in the presentation, and so this
+    // congruence is the trivial one.
     ++it;
     REQUIRE((sims::right_generating_pairs(*it) | rx::to_vector())
             == std::vector<relation_type>({{00_w, {}},
@@ -4222,8 +4214,9 @@ namespace libsemigroups {
     auto rg = ReportGuard(false);
     // Presentation taken from
     // Al-Kharousi, F., Cain, A.J., Maltcev, V. et al.
-    // A countable family of finitely presented infinite congruence-free
-    // monoids https://doi.org/10.14232/actasm-013-028-z
+    // A countable family of finitely presented
+    // infinite congruence-free monoids
+    // https://doi.org/10.14232/actasm-013-028-z
     Presentation<std::string> p;
     p.alphabet("abcdz");
     p.contains_empty_word(true);
@@ -4255,8 +4248,9 @@ namespace libsemigroups {
     auto rg = ReportGuard(false);
     // Presentation taken from
     // Al-Kharousi, F., Cain, A.J., Maltcev, V. et al.
-    // A countable family of finitely presented infinite congruence-free
-    // monoids https://doi.org/10.14232/actasm-013-028-z
+    // A countable family of finitely presented
+    // infinite congruence-free monoids
+    // https://doi.org/10.14232/actasm-013-028-z
     Presentation<std::string> p;
     p.alphabet("abcdz");
     p.contains_empty_word(true);
@@ -4363,26 +4357,31 @@ namespace libsemigroups {
     p.contains_empty_word(false);
     Sims2 s(p);
     s.number_of_threads(4);
-    // Number of congruences with up to 7 classes given in:
-    // A. Bailey, M. Finn-Sell and R. Snocken
-    // "SUBSEMIGROUP, IDEAL AND CONGRUENCE GROWTH OF FREE SEMIGROU6S"
+    // Number of congruences with up to 7 classes
+    // given in: A. Bailey, M. Finn-Sell and R.
+    // Snocken "SUBSEMIGROUP, IDEAL AND CONGRUENCE
+    // GROWTH OF FREE SEMIGROU6S"
     REQUIRE(s.number_of_congruences(1) == 1);
     REQUIRE(s.number_of_congruences(2) == 11);  // From Bailey et al
     REQUIRE(s.number_of_congruences(3) == 51);  // From Bailey et al
-    // sims::dot_poset("free-semigroup-2-sided", s.cbegin(3), s.cend(3));
+    // sims::dot_poset("free-semigroup-2-sided",
+    // s.cbegin(3), s.cend(3));
     REQUIRE(s.number_of_congruences(4) == 200);  // From Bailey et al
 
-    // REQUIRE(s.number_of_congruences(5) == 657);    // From Bailey et al
-    // REQUIRE(s.number_of_congruences(6) == 2'037);  // From Bailey et al
-    // REQUIRE(s.number_of_congruences(7) == 5'977);  // From Bailey et al
-    // sims::add_included_pair(s, 0_w, 1_w);
-    // REQUIRE(s.number_of_congruences(8) == 36);
-    // sims::add_excluded_pair(s, 0_w, 1_w);
+    // REQUIRE(s.number_of_congruences(5) == 657); //
+    // From Bailey et al
+    // REQUIRE(s.number_of_congruences(6) == 2'037);
+    // // From Bailey et al
+    // REQUIRE(s.number_of_congruences(7) == 5'977);
+    // // From Bailey et al sims::add_included_pair(s,
+    // 0_w, 1_w); REQUIRE(s.number_of_congruences(8)
+    // == 36); sims::add_excluded_pair(s, 0_w, 1_w);
     // REQUIRE(s.number_of_congruences(8) == 0);
     // s.clear_included_pairs();
     // REQUIRE(s.number_of_congruences(8) == 17381);
     // s.clear_excluded_pairs();
-    // REQUIRE(s.number_of_congruences(8) == 17381 + 36);
+    // REQUIRE(s.number_of_congruences(8) == 17381 +
+    // 36);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims2",
@@ -4445,10 +4444,13 @@ namespace libsemigroups {
     REQUIRE(s.number_of_threads(8).number_of_congruences(15)
             == 15);  // correct value is 15
 
-    // p  = presentation::examples::partition_monoid(3);
-    // ip = SimsRefinerIdeals(to_presentation<std::string>(p));
+    // p  =
+    // presentation::examples::partition_monoid(3); ip
+    // =
+    // SimsRefinerIdeals(to_presentation<std::string>(p));
     // s.init(p).add_pruner(ip);
-    // REQUIRE(s.number_of_congruences(203) == 5767);  // checked in GAP
+    // REQUIRE(s.number_of_congruences(203) == 5767);
+    // // checked in GAP
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims2",
@@ -4509,32 +4511,61 @@ namespace libsemigroups {
     // REQUIRE(to_presentation<std::string>(s.presentation()).rules
     //         == std::vector<std::string>());
     s.number_of_threads(std::thread::hardware_concurrency());
-    // REQUIRE(s.number_of_congruences(126) == 37'951);
+    // REQUIRE(s.number_of_congruences(126) ==
+    // 37'951);
 
-    // auto wg_found = s.find_if(35, [&pp](auto const& wg) {
+    // auto wg_found = s.find_if(35, [&pp](auto const&
+    // wg) {
     //   return !sims::is_right_congruence(pp, wg);
     // });
 
-    // REQUIRE(wg_found.number_of_active_nodes() == 0);
-    // auto wg_expected = make<WordGraph<uint32_t>>(6,
-    //                                            {{1, 0, 0, 2, 0, 0},
-    //                                             {1, 0, 3, 1, 1, 1},
-    //                                             {2, 2, 2, 2, 0, 2},
-    //                                             {3, 3, 3, 3, 3, 1}});
-    //  REQUIRE(sims::is_right_congruence(p, wg_expected));
+    // REQUIRE(wg_found.number_of_active_nodes() ==
+    // 0); auto wg_expected =
+    // make<WordGraph<uint32_t>>(6,
+    //                                            {{1,
+    //                                            0,
+    //                                            0,
+    //                                            2,
+    //                                            0,
+    //                                            0},
+    //                                             {1,
+    //                                             0,
+    //                                             3,
+    //                                             1,
+    //                                             1,
+    //                                             1},
+    //                                             {2,
+    //                                             2,
+    //                                             2,
+    //                                             2,
+    //                                             0,
+    //                                             2},
+    //                                             {3,
+    //                                             3,
+    //                                             3,
+    //                                             3,
+    //                                             3,
+    //                                             1}});
+    //  REQUIRE(sims::is_right_congruence(p,
+    //  wg_expected));
 
     // REQUIRE(word_graph::is_complete(
-    //     wg_found, wg_found.cbegin_nodes(), wg_found.cbegin_nodes() + 4));
+    //     wg_found, wg_found.cbegin_nodes(),
+    //     wg_found.cbegin_nodes() + 4));
     // auto i = 0;
-    // //    static_assert(::libsemigroups::detail::HasLessEqual<, >::value);
-    // // REQUIRE(pp.rules == std::vector<word_type>());
-    // for (auto it = pp.rules.cbegin(); it < pp.rules.cend(); it += 2) {
+    // //
+    // static_assert(::libsemigroups::detail::HasLessEqual<,
+    // >::value);
+    // // REQUIRE(pp.rules ==
+    // std::vector<word_type>()); for (auto it =
+    // pp.rules.cbegin(); it < pp.rules.cend(); it +=
+    // 2) {
     //   fmt::print("i = {}\n", i);
     //   REQUIRE(word_graph::is_compatible_no_checks(wg_found,
     //                                     wg_found.cbegin_nodes(),
-    //                                     wg_found.cbegin_nodes() + 4,
-    //                                     it,
-    //                                     it + 1));
+    //                                     wg_found.cbegin_nodes()
+    //                                     + 4, it, it
+    //                                     + 1));
     //   i += 1;
     // }
 
@@ -4561,16 +4592,20 @@ namespace libsemigroups {
     REQUIRE(presentation::length(p) == 128);
     Sims1 s(p);
     s.number_of_threads(std::thread::hardware_concurrency());
-    // RC ran this for a while and this is the last line of output before it
-    // was terminated: #1: Sims1: total        90,217,309 (cong.)   |
-    // 1,370,495,022,905 (nodes) #1: Sims1: diff             +2,237 (cong.) |
-    // +63,535,732 (nodes) #1: Sims1: mean              3,633 (cong./s) |
-    // 218,936 (node/s) #1: Sims1: time last s.      447µs (/cong.)  | 15ns
-    // (/node) #1: Sims1: mean time         275µs (/cong.)  | 18ns (/node) #1:
-    // Sims1: time         6h53min48s (total)   |
+    // RC ran this for a while and this is the last
+    // line of output before it was terminated: #1:
+    // Sims1: total        90,217,309 (cong.)   |
+    // 1,370,495,022,905 (nodes) #1: Sims1: diff
+    // +2,237 (cong.) | +63,535,732 (nodes) #1: Sims1:
+    // mean              3,633 (cong./s) | 218,936
+    // (node/s) #1: Sims1: time last s.      447µs
+    // (/cong.)  | 15ns
+    // (/node) #1: Sims1: mean time         275µs
+    // (/cong.)  | 18ns (/node) #1: Sims1: time
+    // 6h53min48s (total)   |
 
-    // NOTE: Never ran to completion, there should be a non-zero number of
-    // congruences.
+    // NOTE: Never ran to completion, there should be
+    // a non-zero number of congruences.
     REQUIRE(s.number_of_congruences(462) == 0);
   }
 
@@ -4744,21 +4779,26 @@ namespace libsemigroups {
     REQUIRE(to_human_readable_repr(sims_stats) == "<SimsStats object>");
     REQUIRE(to_human_readable_repr(sims_refiner_ideals)
             == fmt::format(
-                "<SimsRefinerIdeals object over presentation {}>",
+                "<SimsRefinerIdeals object over "
+                "presentation {}>",
                 to_human_readable_repr(sims_refiner_ideals.presentation())));
     sims_refiner_ideals.init(p);
     REQUIRE(to_human_readable_repr(sims_refiner_ideals)
             == fmt::format(
-                "<SimsRefinerIdeals object over presentation {}>",
+                "<SimsRefinerIdeals object over "
+                "presentation {}>",
                 to_human_readable_repr(sims_refiner_ideals.presentation())));
     REQUIRE(to_human_readable_repr(sims_refiner_faithful)
-            == "<SimsRefinerFaithful object with 0 forbidden pairs>");
+            == "<SimsRefinerFaithful object with 0 "
+               "forbidden pairs>");
     sims_refiner_faithful.init({01_w, 10_w});
     REQUIRE(to_human_readable_repr(sims_refiner_faithful)
-            == "<SimsRefinerFaithful object with 1 forbidden pair>");
+            == "<SimsRefinerFaithful object with 1 "
+               "forbidden pair>");
     sims_refiner_faithful.init({01_w, 10_w, 100_w, 0_w, 011_w, 111_w});
     REQUIRE(to_human_readable_repr(sims_refiner_faithful)
-            == "<SimsRefinerFaithful object with 3 forbidden pairs>");
+            == "<SimsRefinerFaithful object with 3 "
+               "forbidden pairs>");
     REQUIRE(to_human_readable_repr(sims1)
             == fmt::format("<Sims1 object over {} with 1 thread>",
                            to_human_readable_repr(sims1.presentation())));
@@ -4766,14 +4806,15 @@ namespace libsemigroups {
             == fmt::format("<Sims2 object over {} with 1 thread>",
                            to_human_readable_repr(sims2.presentation())));
     REQUIRE(to_human_readable_repr(rep_orc)
-            == fmt::format("<RepOrc object over {} with node bounds [0, 0), "
+            == fmt::format("<RepOrc object over {} with "
+                           "node bounds [0, 0), "
                            "target size 0 and 1 thread>",
                            to_human_readable_repr(rep_orc.presentation())));
     REQUIRE(
         to_human_readable_repr(minimal_rep_orc)
-        == fmt::format(
-            "<MinimalRepOrc object over {} with target size 0 and 1 thread>",
-            to_human_readable_repr(minimal_rep_orc.presentation())));
+        == fmt::format("<MinimalRepOrc object over {} with "
+                       "target size 0 and 1 thread>",
+                       to_human_readable_repr(minimal_rep_orc.presentation())));
     sims1.presentation(p);
     sims2.presentation(p);
     rep_orc.presentation(p);
@@ -4785,14 +4826,14 @@ namespace libsemigroups {
             == fmt::format("<Sims2 object over {} with 1 thread>",
                            to_human_readable_repr(p)));
     REQUIRE(to_human_readable_repr(rep_orc)
-            == fmt::format("<RepOrc object over {} with node bounds [0, 0), "
+            == fmt::format("<RepOrc object over {} with "
+                           "node bounds [0, 0), "
                            "target size 0 and 1 thread>",
                            to_human_readable_repr(p)));
-    REQUIRE(
-        to_human_readable_repr(minimal_rep_orc)
-        == fmt::format(
-            "<MinimalRepOrc object over {} with target size 0 and 1 thread>",
-            to_human_readable_repr(p)));
+    REQUIRE(to_human_readable_repr(minimal_rep_orc)
+            == fmt::format("<MinimalRepOrc object over {} with "
+                           "target size 0 and 1 thread>",
+                           to_human_readable_repr(p)));
     sims1.number_of_threads(std::thread::hardware_concurrency());
     sims2.number_of_threads(std::thread::hardware_concurrency());
     rep_orc.number_of_threads(std::thread::hardware_concurrency());
@@ -4806,12 +4847,14 @@ namespace libsemigroups {
                            to_human_readable_repr(p),
                            std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(rep_orc)
-            == fmt::format("<RepOrc object over {} with node bounds [0, 0), "
+            == fmt::format("<RepOrc object over {} with node "
+                           "bounds [0, 0), "
                            "target size 0 and {} threads>",
                            to_human_readable_repr(p),
                            std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(minimal_rep_orc)
-            == fmt::format("<MinimalRepOrc object over {} with target size 0 "
+            == fmt::format("<MinimalRepOrc object over {} with "
+                           "target size 0 "
                            "and {} threads>",
                            to_human_readable_repr(p),
                            std::thread::hardware_concurrency()));
@@ -4824,23 +4867,25 @@ namespace libsemigroups {
     sims::add_included_pair(minimal_rep_orc, 01_w, 10_w);
     sims::add_included_pair(minimal_rep_orc, 010_w, 101_w);
     REQUIRE(to_human_readable_repr(sims1)
-            == fmt::format(
-                "<Sims1 object over {} with 2 included pairs and {} threads>",
-                to_human_readable_repr(p),
-                std::thread::hardware_concurrency()));
+            == fmt::format("<Sims1 object over {} with 2 "
+                           "included pairs and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(sims2)
-            == fmt::format(
-                "<Sims2 object over {} with 2 included pairs and {} threads>",
-                to_human_readable_repr(p),
-                std::thread::hardware_concurrency()));
+            == fmt::format("<Sims2 object over {} with 2 "
+                           "included pairs and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(rep_orc)
-            == fmt::format("<RepOrc object over {} with 2 included pairs, "
+            == fmt::format("<RepOrc object over {} with 2 "
+                           "included pairs, "
                            "node bounds [0, 0), "
                            "target size 0 and {} threads>",
                            to_human_readable_repr(p),
                            std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(minimal_rep_orc)
-            == fmt::format("<MinimalRepOrc object over {} with 2 included "
+            == fmt::format("<MinimalRepOrc object over {} with 2 "
+                           "included "
                            "pairs, target size 0 and {} threads>",
                            to_human_readable_repr(p),
                            std::thread::hardware_concurrency()));
@@ -4853,24 +4898,24 @@ namespace libsemigroups {
     sims::add_excluded_pair(rep_orc, 11_w, 10_w);
     sims::add_excluded_pair(minimal_rep_orc, 11_w, 10_w);
     REQUIRE(to_human_readable_repr(sims1)
-            == fmt::format(
-                "<Sims1 object over {} with 1 excluded pair and {} threads>",
-                to_human_readable_repr(p),
-                std::thread::hardware_concurrency()));
+            == fmt::format("<Sims1 object over {} with 1 "
+                           "excluded pair and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(sims2)
-            == fmt::format(
-                "<Sims2 object over {} with 1 excluded pair and {} threads>",
-                to_human_readable_repr(p),
-                std::thread::hardware_concurrency()));
-    REQUIRE(
-        to_human_readable_repr(rep_orc)
-        == fmt::format(
-            "<RepOrc object over {} with 1 excluded pair, node bounds [0, 0), "
-            "target size 0 and {} threads>",
-            to_human_readable_repr(p),
-            std::thread::hardware_concurrency()));
+            == fmt::format("<Sims2 object over {} with 1 "
+                           "excluded pair and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
+    REQUIRE(to_human_readable_repr(rep_orc)
+            == fmt::format("<RepOrc object over {} with 1 "
+                           "excluded pair, node bounds [0, 0), "
+                           "target size 0 and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(minimal_rep_orc)
-            == fmt::format("<MinimalRepOrc object over {} with 1 excluded "
+            == fmt::format("<MinimalRepOrc object over {} with "
+                           "1 excluded "
                            "pair, target size 0 and {} threads>",
                            to_human_readable_repr(p),
                            std::thread::hardware_concurrency()));
@@ -4882,30 +4927,31 @@ namespace libsemigroups {
     sims::add_included_pair(rep_orc, 010_w, 101_w);
     sims::add_included_pair(minimal_rep_orc, 01_w, 10_w);
     sims::add_included_pair(minimal_rep_orc, 010_w, 101_w);
-    REQUIRE(
-        to_human_readable_repr(sims1)
-        == fmt::format("<Sims1 object over {} with 2 included and 1 excluded "
-                       "pairs and {} threads>",
-                       to_human_readable_repr(p),
-                       std::thread::hardware_concurrency()));
-    REQUIRE(
-        to_human_readable_repr(sims2)
-        == fmt::format("<Sims2 object over {} with 2 included and 1 excluded "
-                       "pairs and {} threads>",
-                       to_human_readable_repr(p),
-                       std::thread::hardware_concurrency()));
+    REQUIRE(to_human_readable_repr(sims1)
+            == fmt::format("<Sims1 object over {} with 2 "
+                           "included and 1 excluded "
+                           "pairs and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
+    REQUIRE(to_human_readable_repr(sims2)
+            == fmt::format("<Sims2 object over {} with 2 "
+                           "included and 1 excluded "
+                           "pairs and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(rep_orc)
-            == fmt::format("<RepOrc object over {} with 2 included and 1 "
+            == fmt::format("<RepOrc object over {} with 2 "
+                           "included and 1 "
                            "excluded pairs, node bounds [0, 0), "
                            "target size 0 and {} threads>",
                            to_human_readable_repr(p),
                            std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(minimal_rep_orc)
-            == fmt::format(
-                "<MinimalRepOrc object over {} with 2 included and 1 excluded "
-                "pairs, target size 0 and {} threads>",
-                to_human_readable_repr(p),
-                std::thread::hardware_concurrency()));
+            == fmt::format("<MinimalRepOrc object over {} with 2 "
+                           "included and 1 excluded "
+                           "pairs, target size 0 and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
 
     std::vector<word_type> forbid = {0_w, 01_w, 00_w, ""_w};
     SimsRefinerFaithful    pruno(forbid);
@@ -4913,59 +4959,64 @@ namespace libsemigroups {
     sims2.add_pruner(pruno);
     rep_orc.add_pruner(pruno);
     minimal_rep_orc.add_pruner(pruno);
-    REQUIRE(
-        to_human_readable_repr(sims1)
-        == fmt::format("<Sims1 object over {} with 2 included and 1 excluded "
-                       "pairs, 1 pruner and {} threads>",
-                       to_human_readable_repr(p),
-                       std::thread::hardware_concurrency()));
-    REQUIRE(
-        to_human_readable_repr(sims2)
-        == fmt::format("<Sims2 object over {} with 2 included and 1 excluded "
-                       "pairs, 1 pruner and {} threads>",
-                       to_human_readable_repr(p),
-                       std::thread::hardware_concurrency()));
+    REQUIRE(to_human_readable_repr(sims1)
+            == fmt::format("<Sims1 object over {} with 2 "
+                           "included and 1 excluded "
+                           "pairs, 1 pruner and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
+    REQUIRE(to_human_readable_repr(sims2)
+            == fmt::format("<Sims2 object over {} with 2 "
+                           "included and 1 excluded "
+                           "pairs, 1 pruner and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(rep_orc)
-            == fmt::format("<RepOrc object over {} with 2 included and 1 "
+            == fmt::format("<RepOrc object over {} with 2 included "
+                           "and 1 "
                            "excluded pairs, node bounds [0, 0), "
                            "target size 0, 1 pruner and {} threads>",
                            to_human_readable_repr(p),
                            std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(minimal_rep_orc)
-            == fmt::format(
-                "<MinimalRepOrc object over {} with 2 included and 1 excluded "
-                "pairs, target size 0, 1 pruner and {} threads>",
-                to_human_readable_repr(p),
-                std::thread::hardware_concurrency()));
+            == fmt::format("<MinimalRepOrc object over {} with "
+                           "2 included and 1 excluded "
+                           "pairs, target size 0, 1 pruner and "
+                           "{} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     SimsRefinerIdeals ideal_pruner(p);
     sims1.add_pruner(ideal_pruner);
     sims2.add_pruner(ideal_pruner);
     rep_orc.add_pruner(ideal_pruner);
     minimal_rep_orc.add_pruner(ideal_pruner);
-    REQUIRE(
-        to_human_readable_repr(sims1)
-        == fmt::format("<Sims1 object over {} with 2 included and 1 excluded "
-                       "pairs, 2 pruners and {} threads>",
-                       to_human_readable_repr(p),
-                       std::thread::hardware_concurrency()));
-    REQUIRE(
-        to_human_readable_repr(sims2)
-        == fmt::format("<Sims2 object over {} with 2 included and 1 excluded "
-                       "pairs, 2 pruners and {} threads>",
-                       to_human_readable_repr(p),
-                       std::thread::hardware_concurrency()));
+    REQUIRE(to_human_readable_repr(sims1)
+            == fmt::format("<Sims1 object over {} with 2 "
+                           "included and 1 excluded "
+                           "pairs, 2 pruners and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
+    REQUIRE(to_human_readable_repr(sims2)
+            == fmt::format("<Sims2 object over {} with 2 "
+                           "included and 1 excluded "
+                           "pairs, 2 pruners and {} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(rep_orc)
-            == fmt::format("<RepOrc object over {} with 2 included and 1 "
+            == fmt::format("<RepOrc object over {} with 2 "
+                           "included and 1 "
                            "excluded pairs, node bounds [0, 0), "
-                           "target size 0, 2 pruners and {} threads>",
+                           "target size 0, 2 pruners and {} "
+                           "threads>",
                            to_human_readable_repr(p),
                            std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(minimal_rep_orc)
-            == fmt::format(
-                "<MinimalRepOrc object over {} with 2 included and 1 excluded "
-                "pairs, target size 0, 2 pruners and {} threads>",
-                to_human_readable_repr(p),
-                std::thread::hardware_concurrency()));
+            == fmt::format("<MinimalRepOrc object over {} with "
+                           "2 included and 1 excluded "
+                           "pairs, target size 0, 2 pruners and "
+                           "{} threads>",
+                           to_human_readable_repr(p),
+                           std::thread::hardware_concurrency()));
     sims1.clear_excluded_pairs();
     sims2.clear_excluded_pairs();
     rep_orc.clear_excluded_pairs();
@@ -4979,24 +5030,29 @@ namespace libsemigroups {
     rep_orc.add_pruner(pruno);
     minimal_rep_orc.add_pruner(pruno);
     REQUIRE(to_human_readable_repr(sims1)
-            == fmt::format("<Sims1 object over {} with 2 included pairs, 1 "
+            == fmt::format("<Sims1 object over {} with 2 "
+                           "included pairs, 1 "
                            "pruner and {} threads>",
                            to_human_readable_repr(p),
                            std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(sims2)
-            == fmt::format("<Sims2 object over {} with 2 included pairs, 1 "
+            == fmt::format("<Sims2 object over {} with 2 "
+                           "included pairs, 1 "
                            "pruner and {} threads>",
                            to_human_readable_repr(p),
                            std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(rep_orc)
-            == fmt::format("<RepOrc object over {} with 2 included pairs, "
+            == fmt::format("<RepOrc object over {} with 2 included "
+                           "pairs, "
                            "node bounds [0, 0), "
                            "target size 0, 1 pruner and {} threads>",
                            to_human_readable_repr(p),
                            std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(minimal_rep_orc)
-            == fmt::format("<MinimalRepOrc object over {} with 2 included "
-                           "pairs, target size 0, 1 pruner and {} threads>",
+            == fmt::format("<MinimalRepOrc object over {} with "
+                           "2 included "
+                           "pairs, target size 0, 1 pruner and "
+                           "{} threads>",
                            to_human_readable_repr(p),
                            std::thread::hardware_concurrency()));
     sims1.add_pruner(ideal_pruner);
@@ -5004,24 +5060,30 @@ namespace libsemigroups {
     rep_orc.add_pruner(ideal_pruner);
     minimal_rep_orc.add_pruner(ideal_pruner);
     REQUIRE(to_human_readable_repr(sims1)
-            == fmt::format("<Sims1 object over {} with 2 included pairs, 2 "
+            == fmt::format("<Sims1 object over {} with 2 "
+                           "included pairs, 2 "
                            "pruners and {} threads>",
                            to_human_readable_repr(p),
                            std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(sims2)
-            == fmt::format("<Sims2 object over {} with 2 included pairs, 2 "
+            == fmt::format("<Sims2 object over {} with 2 "
+                           "included pairs, 2 "
                            "pruners and {} threads>",
                            to_human_readable_repr(p),
                            std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(rep_orc)
-            == fmt::format("<RepOrc object over {} with 2 included pairs, "
+            == fmt::format("<RepOrc object over {} with 2 "
+                           "included pairs, "
                            "node bounds [0, 0), "
-                           "target size 0, 2 pruners and {} threads>",
+                           "target size 0, 2 pruners and {} "
+                           "threads>",
                            to_human_readable_repr(p),
                            std::thread::hardware_concurrency()));
     REQUIRE(to_human_readable_repr(minimal_rep_orc)
-            == fmt::format("<MinimalRepOrc object over {} with 2 included "
-                           "pairs, target size 0, 2 pruners and {} threads>",
+            == fmt::format("<MinimalRepOrc object over {} with "
+                           "2 included "
+                           "pairs, target size 0, 2 pruners and "
+                           "{} threads>",
                            to_human_readable_repr(p),
                            std::thread::hardware_concurrency()));
   }
@@ -5163,11 +5225,14 @@ namespace libsemigroups {
     REQUIRE(d.number_of_nodes() == 6);
   }
 
-  // TODO(0): test fails for now, uncomment when we get Sims<Word> to work as
-  // per forthcoming changes to congruence interface and friends
+  // TODO(0): test fails for now, uncomment when we
+  // get Sims<Word> to work as per forthcoming changes
+  // to congruence interface and friends
   // LIBSEMIGROUPS_TEST_CASE("Sims1",
   //                         "131",
-  //                         "fp semigroup containing given pairs, std::string",
+  //                         "fp semigroup containing
+  //                         given pairs,
+  //                         std::string",
   //                         "[quick][low-index]") {
   //   auto rg = ReportGuard(false);
   //
@@ -5189,8 +5254,10 @@ namespace libsemigroups {
   //     presentation::reverse(p);
   //     T.presentation(p);
   //     sims::add_included_pair(T, "abab", "a");
-  //     REQUIRE(T.included_pairs() == std::vector<word_type>({"abab", "a"}));
-  //     REQUIRE(T.number_of_congruences(5) == 4);  // Verified with GAP
+  //     REQUIRE(T.included_pairs() ==
+  //     std::vector<word_type>({"abab", "a"}));
+  //     REQUIRE(T.number_of_congruences(5) == 4);  //
+  //     Verified with GAP
   //   }
   //   check_include(p, {"abab", "a"}, 5);
   //   presentation::reverse(p);
@@ -5207,13 +5274,16 @@ namespace libsemigroups {
     using words::operator+;
 
     Presentation<word_type> p;
-    // plusses indicate that the result was reached but could not be verified.
+    // plusses indicate that the result was reached
+    // but could not be verified.
     std::vector<size_t>  results = {1, 2, 7, 22, +84, +364, +1734, +8943};
     WordGraph<node_type> wg;
     Sims1                sims;
-    // The forbid list depends on the presentation used by
+    // The forbid list depends on the presentation
+    // used by
     // presentation::examples::partition_monoid
-    // If this changes, then the test will no longer be correct.
+    // If this changes, then the test will no longer
+    // be correct.
     std::vector<word_type> forbid;
     SimsRefinerFaithful    pruno(forbid);
     for (size_t n = 2; n <= 7; ++n) {
@@ -5256,7 +5326,8 @@ namespace libsemigroups {
     using words::operator+;
 
     Presentation<word_type> p;
-    // plusses indicate that the result was reached but could not be verified.
+    // plusses indicate that the result was reached
+    // but could not be verified.
     std::vector<size_t>    results = {1,
                                       1,
                                       2,
@@ -5322,7 +5393,8 @@ namespace libsemigroups {
     using words::operator+;
 
     Presentation<word_type> p;
-    // plusses indicate that the result was reached but could not be verified.
+    // plusses indicate that the result was reached
+    // but could not be verified.
     std::vector<size_t>  results = {1, 2, 6, 14, +39, +117, +383, +1311, +7080};
     WordGraph<node_type> wg;
     Sims1                sims;
@@ -5368,7 +5440,8 @@ namespace libsemigroups {
     using words::operator+;
 
     Presentation<word_type> p;
-    // plusses indicate that the result was reached but could not be verified.
+    // plusses indicate that the result was reached
+    // but could not be verified.
     std::vector<size_t> results
         = {1, 2, 6, 13, +31, +77, +197, +513, +1354, +3611, +9714};
     WordGraph<node_type>   wg;
@@ -5417,7 +5490,8 @@ namespace libsemigroups {
     using words::operator+;
 
     Presentation<word_type> p;
-    // plusses indicate that the result was reached but could not be verified.
+    // plusses indicate that the result was reached
+    // but could not be verified.
     std::vector<size_t>    results = {1, 1, 3, 7, 22, 46, +196, +523};
     WordGraph<node_type>   wg;
     Sims1                  sims;
@@ -5456,6 +5530,17 @@ namespace libsemigroups {
                         [](auto const&) { return true; });
       REQUIRE(wg.number_of_active_nodes() == 0);
     }
+  }
+  LIBSEMIGROUPS_TEST_CASE("Sims1",
+                          "134",
+                          "free group, n = 2, index = 8",
+                          "[fail][sims1]") {
+    Presentation<std::string> p;
+    p.alphabet("abAB");
+    presentation::add_inverse_rules(p, "ABab");
+    p.contains_empty_word(true);
+    Sims1 S(p);
+    REQUIRE(S.number_of_congruences(8) == 306'432);
   }
 
 }  // namespace libsemigroups
