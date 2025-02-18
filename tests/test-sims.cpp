@@ -2388,6 +2388,7 @@ namespace libsemigroups {
     presentation::add_inverse_rules(p, "XxYy");
     presentation::add_rule(p, reduce(kb, comm("y", comm("y", z))), "x");
     presentation::add_rule(p, reduce(kb, comm(z, comm(z, "x"))), "y");
+    // REQUIRE(p.rules == std::vector<std::string>());
     presentation::balance_no_checks(p, p.alphabet(), std::string("XxYy"));
 
     REQUIRE(p.rules
@@ -2407,9 +2408,54 @@ namespace libsemigroups {
     //  ParseRelators(GeneratorsOfGroup(F), "xX=1, Xx=1, yY=1, Yy=1,
     //  YYXyXYxyxYXYXyxYxy= xYXyXYxyxYXYXyxYx, YXyXXYxyxYXyxY= yXYXyXYxyxxYX");
 
+    auto conj = [](auto const& wg) {
+      using node_type = uint32_t;
+      std::array<node_type, 8> new_old;  // (wg.number_of_nodes(),
+                                         // static_cast<node_type>(UNDEFINED));
+      std::array<node_type, 8> old_new;
+      for (uint32_t root = 1; root < wg.number_of_active_nodes(); ++root) {
+        node_type    next = 0;
+        size_t const n    = wg.out_degree();
+        // std::fill(new_old.begin(), new_old.end(), UNDEFINED);
+        std::fill(old_new.begin(), old_new.end(), UNDEFINED);
+
+        new_old[0]    = root;
+        old_new[root] = 0;
+
+        for (node_type s = 0; s <= next; ++s) {
+          for (letter_type a = 0; a < n; ++a) {
+            node_type t_old = wg.target_no_checks(new_old[s], a);
+            node_type sa    = wg.target_no_checks(s, a);
+            if (t_old == UNDEFINED || sa == UNDEFINED) {
+              goto end;
+            }
+            node_type t_new = old_new[t_old];
+            if (t_new == UNDEFINED) {
+              old_new[t_old] = ++next;
+              new_old[next]  = t_old;
+              t_new          = next;
+            }
+            if (sa < t_new) {
+              goto end;
+            } else if (sa != UNDEFINED && sa > t_new) {
+              // fmt::print("{}\n", old_new);
+              // fmt::print("{}\n\n", detail::to_string(wg));
+              return false;
+            }
+          }
+        }
+      end:
+        (void) 0;
+      }
+      return true;
+    };
     Sims1 S;
-    S.presentation(p).number_of_threads(4).long_rule_length(35);
-    REQUIRE(S.number_of_congruences(9) == 12);
+    S.presentation(p)
+        .idle_thread_restarts(256)
+        .number_of_threads(4)
+        .long_rule_length(35)
+        .add_pruner(conj);
+    REQUIRE(S.number_of_congruences(8) == 3);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1",
@@ -2436,6 +2482,95 @@ namespace libsemigroups {
     Sims1 S;
     S.presentation(p).number_of_threads(4);  // .long_rule_length(35);
     REQUIRE(S.number_of_congruences(8) == 12);
+  }
+
+  LIBSEMIGROUPS_TEST_CASE("Sims1",
+                          "135",
+                          "Heineken group - index 8 (conjugate pruner)",
+                          "[extreme][sims1]") {
+    using knuth_bendix::reduce;
+    auto                      rg = ReportGuard(true);
+    Presentation<std::string> p;
+    p.contains_empty_word(true);
+    p.alphabet("xXyYzZ");
+    presentation::add_inverse_rules(p, "XxYyZz");
+    KnuthBendix kb(congruence_kind::twosided, p);
+
+    //  < x,y,z | [x,[x,y]]=z, [y,[y,z]]=x, [z,[z,x]]=y >
+    auto w = reduce(kb, comm("x", comm("x", "y")) + "Z");
+    presentation::add_rule(p, w, "");
+    all_cyclic_perms(p, w);
+    w = invert(w);
+    all_cyclic_perms(p, w);
+
+    w = reduce(kb, comm("y", comm("y", "z")) + "X");
+    presentation::add_rule(p, w, "");
+    all_cyclic_perms(p, w);
+    w = invert(w);
+    all_cyclic_perms(p, w);
+
+    w = reduce(kb, comm("z", comm("z", "x")) + "Y");
+    presentation::add_rule(p, w, "");
+    all_cyclic_perms(p, w);
+    w = invert(w);
+    all_cyclic_perms(p, w);
+
+    presentation::balance_no_checks(p, p.alphabet(), std::string("XxYyZz"));
+    presentation::remove_trivial_rules(p);
+    presentation::remove_duplicate_rules(p);
+
+    // REQUIRE(p.rules == std::vector<std::string>());
+
+    auto conj = [](auto const& wg) {
+      using node_type = uint32_t;
+      std::array<node_type, 8> new_old;  // (wg.number_of_nodes(),
+                                         // static_cast<node_type>(UNDEFINED));
+      std::array<node_type, 8> old_new;
+      ;  // (new_old);
+      for (uint32_t root = 1; root < wg.number_of_active_nodes(); ++root) {
+        node_type    next = 0;
+        size_t const n    = wg.out_degree();
+        // std::fill(new_old.begin(), new_old.end(), UNDEFINED);
+        std::fill(old_new.begin(), old_new.end(), UNDEFINED);
+
+        new_old[0]    = root;
+        old_new[root] = 0;
+
+        for (node_type s = 0; s <= next; ++s) {
+          for (letter_type a = 0; a < n; ++a) {
+            node_type t_old = wg.target_no_checks(new_old[s], a);
+            node_type sa    = wg.target_no_checks(s, a);
+            if (t_old == UNDEFINED || sa == UNDEFINED) {
+              goto end;
+            }
+            node_type t_new = old_new[t_old];
+            if (t_new == UNDEFINED) {
+              old_new[t_old] = ++next;
+              new_old[next]  = t_old;
+              t_new          = next;
+            }
+            if (sa < t_new) {
+              goto end;
+            } else if (sa != UNDEFINED && sa > t_new) {
+              // fmt::print("{}\n", old_new);
+              // fmt::print("{}\n\n", detail::to_string(wg));
+              return false;
+            }
+          }
+        }
+      end:
+        (void) 0;
+      }
+      return true;
+    };
+
+    Sims1 S;
+    // p.rules.clear();
+    // presentation::add_inverse_rules(p, "XxYyZz");
+    S.presentation(p).add_pruner(conj).number_of_threads(4);
+    // add_pruner(conj).
+    // ;  // .long_rule_length(35);
+    REQUIRE(S.number_of_congruences(8) == 3);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1",
@@ -5531,6 +5666,7 @@ namespace libsemigroups {
       REQUIRE(wg.number_of_active_nodes() == 0);
     }
   }
+
   LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "134",
                           "free group, n = 2, index = 8",
