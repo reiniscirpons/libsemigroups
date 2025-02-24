@@ -2523,9 +2523,10 @@ namespace libsemigroups {
 
     auto conj = [](auto const& wg) {
       using node_type = uint32_t;
-      std::array<node_type, 8> new_old;  // (wg.number_of_nodes(),
-                                         // static_cast<node_type>(UNDEFINED));
-      std::array<node_type, 8> old_new;
+      std::array<node_type, 100>
+          new_old;  // (wg.number_of_nodes(),
+                    // static_cast<node_type>(UNDEFINED));
+      std::array<node_type, 100> old_new;
       ;  // (new_old);
       for (uint32_t root = 1; root < wg.number_of_active_nodes(); ++root) {
         node_type    next = 0;
@@ -2567,10 +2568,20 @@ namespace libsemigroups {
     Sims1 S;
     // p.rules.clear();
     // presentation::add_inverse_rules(p, "XxYyZz");
-    S.presentation(p).add_pruner(conj).number_of_threads(4);
+    S.presentation(p).add_pruner(conj).number_of_threads(
+        std::thread::hardware_concurrency());
     // add_pruner(conj).
     // ;  // .long_rule_length(35);
+    // REQUIRE(S.number_of_congruences(1) == 1);
+    // REQUIRE(S.number_of_congruences(2) == 1);
+    // REQUIRE(S.number_of_congruences(3) == 1);
+    // REQUIRE(S.number_of_congruences(4) == 1);
+    // REQUIRE(S.number_of_congruences(5) == 2);
+    // REQUIRE(S.number_of_congruences(6) == 3);
+    // REQUIRE(S.number_of_congruences(7) == 3);
     REQUIRE(S.number_of_congruences(8) == 3);
+    REQUIRE(S.number_of_congruences(9) == 3);
+    REQUIRE(S.number_of_congruences(10) == 5);
   }
 
   LIBSEMIGROUPS_TEST_CASE("Sims1",
@@ -3432,7 +3443,7 @@ namespace libsemigroups {
   LIBSEMIGROUPS_TEST_CASE("Sims1",
                           "080",
                           "fibonacci_group(2, 9) x 1",
-                          "[quick][no-valgrind]") {
+                          "[extreme][no-valgrind]") {
     auto                      rg = ReportGuard(true);
     Presentation<std::string> p;
     p.alphabet("abcdefghiABCDEFGHI");
